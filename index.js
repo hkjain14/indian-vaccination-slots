@@ -12,7 +12,6 @@ async function getRequest(url) {
 
 function findDate() {
     const currentDateTime = new Date();
-    currentDateTime.setDate(currentDateTime.getDate() + 1) // Since same day booking facility is not available on cowin
     const istDateTime = currentDateTime.toLocaleString('en-GB', {timeZone: 'Asia/Calcutta'})
     const splitDateTime = istDateTime.split('/');
     const date = splitDateTime[0];
