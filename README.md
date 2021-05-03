@@ -38,7 +38,7 @@ Installing nodeJs : [here](https://nodejs.org/en/download/)
 
 ### District wise :
 
-`node index.js Delhi-NorthDelhi 45 covaxin`
+`node index.js Delhi-NorthDelhi 45`
 
 #### Structure of district's request:  
 
