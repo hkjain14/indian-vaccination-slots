@@ -80,7 +80,7 @@ async function findVaccinationCenters() {
                         isCenterFound = true;
                         const vaccinationLogString = session.vaccine !== '' ? session.vaccine.toUpperCase() : 'Not known';
                         const pincodeString = pinCode ? '' : `(Pin : ${center.pincode}) `;
-                        console.log(`${center.name} ${pincodeString}on ${session.date} with vaccine : ${vaccinationLogString}`);
+                        console.log(`${session.available_capacity} slots available at ${center.name} ${pincodeString}on ${session.date} with vaccine : ${vaccinationLogString}`);
                     }
                 });
             })

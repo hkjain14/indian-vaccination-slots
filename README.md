@@ -1,10 +1,11 @@
 # Indian-vaccination-slots
 
 This app gives you following details about Covid-19 Indian vaccination slot availability for the next **7 days**:
-1. Available Center
-2. Pincode
-3. Date of availability
-4. Vaccine Provided at center
+1. No. of slots available at the center
+2. Available Center
+3. Pincode
+4. Date of availability
+5. Vaccine Provided at center
 
 The app can be used for following requests:
 1. Pincode OR District name **(required)**
