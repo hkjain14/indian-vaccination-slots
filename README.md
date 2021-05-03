@@ -22,15 +22,16 @@ Installing nodeJs : [here](https://nodejs.org/en/download/)
 
 
 3. Run the following :
-###Pincode wise : 
+
+### Pincode wise : 
 
 `node index.js 110006 60 covishield`
 
-####District wise :
+### District wise :
 
 `node index.js Delhi-NorthDelhi 45 covaxin`
 
-####Structure of district's request:  
+#### Structure of district's request:  
 
 _State-District in SentenceCase_.
 
