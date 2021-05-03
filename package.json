@@ -1,0 +1,13 @@
+{
+  "name": "indian-vaccination-slots",
+  "version": "1.0.0",
+  "description": "An app to find Covid-19 Indian vaccination slot availability",
+  "author": "hkjain14",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1"
+  }
+}
