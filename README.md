@@ -10,7 +10,7 @@ This app gives you following details about Covid-19 Indian vaccination slot avai
 The app can be used for following requests:
 1. Pincode OR District name **(required)**
 2. Age
-3. **Vaccine preference**
+3. **Vaccine preference** (optional)
 
 ### Results
 
@@ -30,7 +30,7 @@ Installing nodeJs : [here](https://nodejs.org/en/download/)
 `cd indian-vaccination-slots/`
 
 
-3. Run the following :
+3. Provide pincode/district, age, vaccine preference (optional) by running the following :
 
 ### Pincode wise : 
 
