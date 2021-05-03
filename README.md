@@ -12,7 +12,7 @@ The app can be used for following requests:
 2. Age
 3. **Vaccine preference**
 
-###Results
+### Results
 
 If successful results are procured, then a notification audio sound is played. 
 
