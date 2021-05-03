@@ -12,6 +12,12 @@ The app can be used for following requests:
 2. Age
 3. **Vaccine preference**
 
+###Results
+
+If successful results are procured, then a notification audio sound is played. 
+
+Otherwise, the request is made again after every 5 seconds, until available slots are obtained (or if the process is stopped manually).
+
 ### Prerequisites
 Installing nodeJs : [here](https://nodejs.org/en/download/)
 

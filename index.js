@@ -1,4 +1,5 @@
 const axios = require('axios');
+const player = require('play-sound')(opts = {});
 
 async function getRequest(url) {
     const configs = { headers : { BearerAuth: 123 } };
@@ -56,7 +57,8 @@ async function generateCentersUrl(pinCode, area) {
     return centersUrl;
 }
 
-async function findVaccinationCenters() {
+async function findVaccinationCenters(intervalid) {
+    console.log('-----------');
     const myArgs = process.argv.slice(2);
     let pinCode, area;
     const firstArg = myArgs[0];
@@ -86,13 +88,27 @@ async function findVaccinationCenters() {
             })
         }
         if (!isCenterFound) {
-            console.log('No available centers found in pincode/area for age specified for the next 7 days');
-            console.log('Try choosing a nearby pincode/area');
+            console.log('No available centers found in pincode/area for age specified for the next 7 days. Try choosing a nearby pincode/area');
+            console.log('Retrying after 5 seconds');
+        } else {
+            clearInterval(intervalid);
+            player.play('./notification.mp3', function (err) {
+                if (err) throw err;
+            });
         }
+        return isCenterFound;
     } catch (e) {
         console.log('Error has occurred. Please try again later.');
         console.log('Error message: ', e.message);
     }
 }
+async function run() {
+    const isCenterFound = await findVaccinationCenters();
+    if(!isCenterFound) {
+        const intervalId = setInterval(async () => {
+            await findVaccinationCenters(intervalId);
+        }, 5000);
+    }
+}
 
-findVaccinationCenters();
+run();
