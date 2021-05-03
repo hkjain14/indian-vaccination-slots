@@ -9,7 +9,7 @@ This app gives you following details about Covid-19 Indian vaccination slot avai
 The app can be used for following requests:
 1. Pincode OR District name **(required)**
 2. Age
-3. Vaccine preference
+3. **Vaccine preference**
 
 ### Prerequisites
 Installing nodeJs : [here](https://nodejs.org/en/download/)
@@ -20,22 +20,26 @@ Installing nodeJs : [here](https://nodejs.org/en/download/)
 
 2. Navigate to the repo's directory via terminal.
 
+`cd indian-vaccination-slots/`
+
 
 3. Run the following :
-###Pincode wise : 
+
+### Pincode wise : 
 
 `node index.js 110006 60 covishield`
 
-####District wise :
+### District wise :
 
 `node index.js Delhi-NorthDelhi 45 covaxin`
 
-####Structure of district's request:  
+#### Structure of district's request:  
 
 _State-District in SentenceCase_.
 
 For example : AndhraPradesh-EastGodavari
-####Note :
+
+#### Note :
 
 If no vaccine is specified, both the vaccines' results would be displayed.
 
