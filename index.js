@@ -1,6 +1,9 @@
 const axios = require('axios');
 const player = require('play-sound')(opts = {});
 
+const retryTimeInSeconds = 5;
+const validVaccines = ['COVISHIELD', 'COVAXIN'];
+
 async function getRequest(url) {
     const configs = { headers : { BearerAuth: 123 } };
     try {
@@ -24,11 +27,11 @@ function findDate() {
 function generateFilters(age, vaccinePreference) {
     const ageToCheck = age >= 18 && age <= 44 ? 18 : 45;
     let upperCaseVaccinePreference = vaccinePreference && vaccinePreference.toUpperCase();
-    const validVaccines = ['COVISHIELD', 'COVAXIN'];
     if ((upperCaseVaccinePreference && !validVaccines.includes(upperCaseVaccinePreference)) || !upperCaseVaccinePreference) {
         upperCaseVaccinePreference = '';
     }
-    const matchVaccineArray = upperCaseVaccinePreference !== '' ? [vaccinePreference.toUpperCase()] : ['', 'COVISHIELD', 'COVAXIN'];
+    const availableVaccines = ['', ...validVaccines];
+    const matchVaccineArray = upperCaseVaccinePreference !== '' ? [vaccinePreference.toUpperCase()] : availableVaccines;
     return {ageToCheck, matchVaccineArray};
 }
 
@@ -57,8 +60,9 @@ async function generateCentersUrl(pinCode, area) {
     return centersUrl;
 }
 
-async function findVaccinationCenters(intervalid) {
+async function findVaccinationCenters(intervalId) {
     console.log('-----------');
+    let isCenterFound = false;
     const myArgs = process.argv.slice(2);
     let pinCode, area;
     const firstArg = myArgs[0];
@@ -67,31 +71,34 @@ async function findVaccinationCenters(intervalid) {
     const age = myArgs[1] || 45;
     const vaccinePreference = myArgs[2];
     try {
-        if (age < 18 || age>=120) {
+        if (age < 18 || age>=130) {
             console.log('Invalid age entered. Please enter a valid age');
-            return;
+            return true;
         }
         const centersUrl = await generateCentersUrl(pinCode, area);
         const {ageToCheck, matchVaccineArray} = generateFilters(age, vaccinePreference);
-        let isCenterFound = false;
         if(centersUrl) {
             const {centers} = await getRequest(centersUrl);
             centers.map((center) => {
                 center.sessions.map((session) => {
                     if (session.min_age_limit === ageToCheck && session.available_capacity !== 0 && matchVaccineArray.includes(session.vaccine.toUpperCase())) {
                         isCenterFound = true;
-                        const vaccinationLogString = session.vaccine !== '' ? session.vaccine.toUpperCase() : 'Not known';
-                        const pincodeString = pinCode ? '' : `(Pin : ${center.pincode}) `;
-                        console.log(`${session.available_capacity} slots available at ${center.name} ${pincodeString}on ${session.date} with vaccine : ${vaccinationLogString}`);
+                        const vaccinationLogString = session.vaccine !== '' ? session.vaccine.toUpperCase() : 'Unknown';
+                        const pincodeLogString = pinCode ? '' : `(Pin : ${center.pincode}) `;
+                        console.log(`${session.available_capacity} slots available at ${center.name} ${pincodeLogString}on ${session.date} with vaccine : ${vaccinationLogString}`);
                     }
                 });
             })
+        } else {
+            console.log('Enter valid area. Tip: Enter district in SentenceCase like Delhi-SouthWestDelhi');
+            clearInterval(intervalId);
+            return true;
         }
         if (!isCenterFound) {
-            console.log('No available centers found in pincode/area for age specified for the next 7 days. Try choosing a nearby pincode/area');
-            console.log('Retrying after 5 seconds');
+            console.log('No available centers found in pincode/area for age specified for the next 7 days. Try choosing a nearby pincode/area.');
+            console.log(`Retrying after ${retryTimeInSeconds} seconds`);
         } else {
-            clearInterval(intervalid);
+            clearInterval(intervalId);
             player.play('./notification.mp3', function (err) {
                 if (err) throw err;
             });
@@ -107,7 +114,7 @@ async function run() {
     if(!isCenterFound) {
         const intervalId = setInterval(async () => {
             await findVaccinationCenters(intervalId);
-        }, 5000);
+        }, retryTimeInSeconds*1000);
     }
 }
 
