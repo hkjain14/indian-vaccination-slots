@@ -34,7 +34,7 @@ Installing nodeJs : [here](https://nodejs.org/en/download/)
 3. Navigate to the repo's directory via terminal.
 
 
-     cd indian-vaccination-slots/
+     `cd indian-vaccination-slots/`
 
 
 4. Provide pincode/district/state, age, vaccine preference (optional) by running the following :
