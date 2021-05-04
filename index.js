@@ -5,9 +5,8 @@ const retryTimeInSeconds = 5;
 const validVaccines = ['COVISHIELD', 'COVAXIN'];
 
 async function getRequest(url) {
-    const configs = { headers : { BearerAuth: 123 } };
     try {
-        const response = await axios.get(url, configs);
+        const response = await axios.get(url);
         return response.data;
     } catch (e) {
         throw e;
@@ -35,8 +34,12 @@ function generateFilters(age, vaccinePreference) {
     return {ageToCheck, matchVaccineArray};
 }
 
+function generateDistrictWiseCentersUrl(districtId) {
+    return `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${districtId}&date=${findDate()}`;
+}
+
 async function generateCentersUrl(pinCode, area) {
-    let centersUrl;
+    let centersUrlArray = [];
     if (area) {
         const getStatesUrl = 'https://cdn-api.co-vin.in/api/v2/admin/location/states';
         const statesData = await getRequest(getStatesUrl);
@@ -49,15 +52,21 @@ async function generateCentersUrl(pinCode, area) {
         if (state) {
             const getDistrictsUrl = `https://cdn-api.co-vin.in/api/v2/admin/location/districts/${state.state_id}`;
             const districtsData = await getRequest(getDistrictsUrl);
-            const district = districtsData.districts.find((el) => areaArray[1] && areaArray[1].toLowerCase().includes(el.district_name.toLowerCase()));
-            if (district) {
-                centersUrl = `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${district.district_id}&date=${findDate()}`;
+            if(areaArray[1]) {
+                const district = districtsData.districts.find((el) => areaArray[1] && areaArray[1].toLowerCase().includes(el.district_name.toLowerCase()));
+                if (district) {
+                    centersUrlArray.push(generateDistrictWiseCentersUrl(district.district_id));
+                }
+            } else {
+                districtsData.districts.map((district) => {
+                    centersUrlArray.push(generateDistrictWiseCentersUrl(district.district_id));
+                });
             }
         }
     } else if (pinCode) {
-        centersUrl = `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode=${pinCode}&date=${findDate()}`;
+        centersUrlArray.push(`https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode=${pinCode}&date=${findDate()}`);
     }
-    return centersUrl;
+    return centersUrlArray;
 }
 
 async function findVaccinationCenters(intervalId) {
@@ -75,20 +84,22 @@ async function findVaccinationCenters(intervalId) {
             console.log('Invalid age entered. Please enter a valid age');
             return true;
         }
-        const centersUrl = await generateCentersUrl(pinCode, area);
+        const centersUrlArray = await generateCentersUrl(pinCode, area);
         const {ageToCheck, matchVaccineArray} = generateFilters(age, vaccinePreference);
-        if(centersUrl) {
-            const {centers} = await getRequest(centersUrl);
-            centers.map((center) => {
-                center.sessions.map((session) => {
-                    if (session.min_age_limit === ageToCheck && session.available_capacity !== 0 && matchVaccineArray.includes(session.vaccine.toUpperCase())) {
-                        isCenterFound = true;
-                        const vaccinationLogString = session.vaccine !== '' ? session.vaccine.toUpperCase() : 'Unknown';
-                        const pincodeLogString = pinCode ? '' : `(Pin : ${center.pincode}) `;
-                        console.log(`${session.available_capacity} slots available at ${center.name} ${pincodeLogString}on ${session.date} with vaccine : ${vaccinationLogString}`);
-                    }
+        if(centersUrlArray.length > 0) {
+            await Promise.all(centersUrlArray.map(async (centersUrl) => {
+                const {centers} = await getRequest(centersUrl);
+                centers.map((center) => {
+                    center.sessions.map((session) => {
+                        if (session.min_age_limit === ageToCheck && session.available_capacity !== 0 && matchVaccineArray.includes(session.vaccine.toUpperCase())) {
+                            isCenterFound = true;
+                            const vaccinationLogString = session.vaccine !== '' ? session.vaccine.toUpperCase() : 'Unknown';
+                            const pincodeLogString = pinCode ? '' : `(Pin : ${center.pincode}) `;
+                            console.log(`${session.available_capacity} slots available at ${center.name} ${pincodeLogString}on ${session.date} with vaccine : ${vaccinationLogString}`);
+                        }
+                    });
                 });
-            })
+            }));
         } else {
             console.log('Enter valid area. Tip: Enter district in SentenceCase like Delhi-SouthWestDelhi');
             clearInterval(intervalId);
@@ -105,10 +116,11 @@ async function findVaccinationCenters(intervalId) {
         }
         return isCenterFound;
     } catch (e) {
-        console.log('Error has occurred. Please try again later.');
-        console.log('Error message: ', e.message);
+        console.log('Unable to fetch right now. Please try again later.');
+        return true;
     }
 }
+
 async function run() {
     const isCenterFound = await findVaccinationCenters();
     if(!isCenterFound) {

@@ -1,7 +1,7 @@
 {
   "name": "indian-vaccination-slots",
   "version": "1.0.0",
-  "description": "An app to find Covid-19 Indian vaccination slot availability",
+  "description": "An app to find Covid-19 Indian vaccination slot availability in a state/district/pincode",
   "author": "hkjain14",
   "main": "index.js",
   "scripts": {},

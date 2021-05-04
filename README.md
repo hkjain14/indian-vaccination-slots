@@ -8,7 +8,7 @@ This app gives you following details about Covid-19 Indian vaccination slot avai
 5. Vaccine Provided at center
 
 The app can be used for following requests:
-1. Pincode OR District name **(required)**
+1. **State** OR Pincode OR District name **(required)**
 2. Age
 3. **Vaccine preference** (optional)
 
@@ -32,13 +32,24 @@ Installing nodeJs : [here](https://nodejs.org/en/download/)
 
 3. Provide pincode/district, age, vaccine preference (optional) by running the following :
 
-### Pincode wise : 
+### i) State wise :
+
+`node index.js Delhi 24`
+
+#### Structure of state's request:
+
+_State in SentenceCase_.
+
+For example : AndhraPradesh
+
+### ii) Pincode wise : 
 
 `node index.js 110006 60 covishield`
 
-### District wise :
+### iii) District wise :
 
-`node index.js Delhi-NorthDelhi 45`
+`node index.js Delhi-NorthDelhi 45 covaxin`
+
 
 #### Structure of district's request:  
 
