@@ -64,3 +64,6 @@ If no vaccine is specified, both the vaccines' results would be displayed.
 
 ## References
 This script uses the API provided by the Government of India [here](https://apisetu.gov.in/public/marketplace/api/cowin).
+
+### Disclaimer
+The exposed API sometimes give stale data. Please confirm actual availability on [Cowin](https://www.cowin.gov.in).
