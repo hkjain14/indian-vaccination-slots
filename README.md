@@ -10,13 +10,13 @@ This app gives you following details about Covid-19 Indian vaccination slot avai
 The app can be used for following requests:
 1. Pincode OR District name **(required)**
 2. Age
-3. **Vaccine preference**
+3. **Vaccine preference** (optional)
 
-###Results
+### Results
 
-If successful results are procured, then a notification audio sound is played. 
+By running the script once, you would be **AUTOMATICALLY INFORMED** (via an audio sound) as soon as an open slot is available for your age. 
 
-Otherwise, the request is made again after every 5 seconds, until available slots are obtained (or if the process is stopped manually).
+Otherwise, the request is made again after **after every 5 seconds**, until available slots are obtained (or if the process is stopped manually).
 
 ### Prerequisites
 Installing nodeJs : [here](https://nodejs.org/en/download/)
@@ -30,7 +30,7 @@ Installing nodeJs : [here](https://nodejs.org/en/download/)
 `cd indian-vaccination-slots/`
 
 
-3. Run the following :
+3. Provide pincode/district, age, vaccine preference (optional) by running the following :
 
 ### Pincode wise : 
 
@@ -38,7 +38,7 @@ Installing nodeJs : [here](https://nodejs.org/en/download/)
 
 ### District wise :
 
-`node index.js Delhi-NorthDelhi 45 covaxin`
+`node index.js Delhi-NorthDelhi 45`
 
 #### Structure of district's request:  
 
