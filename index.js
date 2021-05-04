@@ -13,7 +13,7 @@ async function getRequest(url) {
     }
 }
 
-function findDate() {
+function generateCurrentDate() {
     const currentDateTime = new Date();
     const istDateTime = currentDateTime.toLocaleString('en-GB', {timeZone: 'Asia/Calcutta'})
     const splitDateTime = istDateTime.split('/');
@@ -23,7 +23,14 @@ function findDate() {
     return `${date}-${month}-${year}`;
 }
 
-function generateFilters(age, vaccinePreference) {
+function generateConfigs() {
+    const myArgs = process.argv.slice(2);
+    let pinCode, area;
+    const firstArg = myArgs[0];
+    pinCode = firstArg.length === 6 ? firstArg: undefined;
+    area = firstArg.length === 6 ? undefined: firstArg;
+    const age = myArgs[1] || 45;
+    const vaccinePreference = myArgs[2];
     const ageToCheck = age >= 18 && age <= 44 ? 18 : 45;
     let upperCaseVaccinePreference = vaccinePreference && vaccinePreference.toUpperCase();
     if ((upperCaseVaccinePreference && !validVaccines.includes(upperCaseVaccinePreference)) || !upperCaseVaccinePreference) {
@@ -31,11 +38,11 @@ function generateFilters(age, vaccinePreference) {
     }
     const availableVaccines = ['', ...validVaccines];
     const matchVaccineArray = upperCaseVaccinePreference !== '' ? [vaccinePreference.toUpperCase()] : availableVaccines;
-    return {ageToCheck, matchVaccineArray};
+    return {ageToCheck, matchVaccineArray, area, pinCode};
 }
 
 function generateDistrictWiseCentersUrl(districtId) {
-    return `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${districtId}&date=${findDate()}`;
+    return `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${districtId}&date=${generateCurrentDate()}`;
 }
 
 async function generateCentersUrl(pinCode, area) {
@@ -64,44 +71,41 @@ async function generateCentersUrl(pinCode, area) {
             }
         }
     } else if (pinCode) {
-        centersUrlArray.push(`https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode=${pinCode}&date=${findDate()}`);
+        centersUrlArray.push(`https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode=${pinCode}&date=${generateCurrentDate()}`);
     }
     return centersUrlArray;
 }
 
 async function findVaccinationCenters(intervalId) {
     console.log('-----------');
-    let isCenterFound = false;
+    let numberOfOptionsFound = 0;
     const myArgs = process.argv.slice(2);
-    let pinCode, area;
-    const firstArg = myArgs[0];
-    pinCode = firstArg.length === 6 ? firstArg: undefined;
-    area = firstArg.length === 6 ? undefined: firstArg;
     const age = myArgs[1] || 45;
-    const vaccinePreference = myArgs[2];
+    if (age < 18 || age>=130) {
+        console.log('Invalid age entered. Please enter a valid age');
+        return true;
+    }
+    let isCenterFound = false;
     try {
-        if (age < 18 || age>=130) {
-            console.log('Invalid age entered. Please enter a valid age');
-            return true;
-        }
+        const {ageToCheck, matchVaccineArray, area, pinCode} = generateConfigs();
         const centersUrlArray = await generateCentersUrl(pinCode, area);
-        const {ageToCheck, matchVaccineArray} = generateFilters(age, vaccinePreference);
-        if(centersUrlArray.length > 0) {
+        if (centersUrlArray.length > 0) {
             await Promise.all(centersUrlArray.map(async (centersUrl) => {
                 const {centers} = await getRequest(centersUrl);
                 centers.map((center) => {
                     center.sessions.map((session) => {
                         if (session.min_age_limit === ageToCheck && session.available_capacity !== 0 && matchVaccineArray.includes(session.vaccine.toUpperCase())) {
+                            numberOfOptionsFound++;
                             isCenterFound = true;
                             const vaccinationLogString = session.vaccine !== '' ? session.vaccine.toUpperCase() : 'Unknown';
                             const pincodeLogString = pinCode ? '' : `(Pin : ${center.pincode}) `;
-                            console.log(`${session.available_capacity} slots available at ${center.name} ${pincodeLogString}on ${session.date} with vaccine : ${vaccinationLogString}`);
+                            console.log(`${session.available_capacity} slot(s) available at ${center.name} ${pincodeLogString}on ${session.date} with vaccine : ${vaccinationLogString}`);
                         }
                     });
                 });
             }));
         } else {
-            console.log('Enter valid area. Tip: Enter district in SentenceCase like Delhi-SouthWestDelhi');
+            console.log('Enter valid area. Tip: Enter district/state in SentenceCase like Delhi-SouthWestDelhi');
             clearInterval(intervalId);
             return true;
         }
@@ -109,6 +113,8 @@ async function findVaccinationCenters(intervalId) {
             console.log('No available centers found in pincode/area for age specified for the next 7 days. Try choosing a nearby pincode/area.');
             console.log(`Retrying after ${retryTimeInSeconds} seconds`);
         } else {
+            console.log('-----------');
+            console.log(`A total of ${numberOfOptionsFound} options were found as per your preference`);
             clearInterval(intervalId);
             player.play('./notification.mp3', function (err) {
                 if (err) throw err;

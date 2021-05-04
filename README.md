@@ -22,19 +22,26 @@ Otherwise, the request is made again after **after every 5 seconds**, until avai
 Installing nodeJs : [here](https://nodejs.org/en/download/)
 
 ## How to use
-1. Clone this repo.
+
+1. Disconnect your VPN if connected to a non Indian country 
+   
+   as only Indian IPs seem to be whitelisted for fetching GOI data.
+
+
+2. Clone this repo.
    
 
-2. Navigate to the repo's directory via terminal.
-
-`cd indian-vaccination-slots/`
+3. Navigate to the repo's directory via terminal.
 
 
-3. Provide pincode/district, age, vaccine preference (optional) by running the following :
+     cd indian-vaccination-slots/
+
+
+4. Provide pincode/district/state, age, vaccine preference (optional) by running the following :
 
 ### i) State wise :
 
-`node index.js Delhi 24`
+     node index.js Delhi 24
 
 #### Structure of state's request:
 
@@ -44,11 +51,11 @@ For example : AndhraPradesh
 
 ### ii) Pincode wise : 
 
-`node index.js 110006 60 covishield`
+     node index.js 110006 60 covishield
 
 ### iii) District wise :
 
-`node index.js Delhi-NorthDelhi 45 covaxin`
+     node index.js Delhi-SouthWestDelhi 45 covaxin
 
 
 #### Structure of district's request:  
@@ -67,3 +74,5 @@ This script uses the API provided by the Government of India [here](https://apis
 
 ### Disclaimer
 The exposed API sometimes give stale data. Please confirm actual availability on [Cowin](https://www.cowin.gov.in).
+
+I have personally observed that the same center shows different number of available slots when searched via pincode as compared to when searched via district.
