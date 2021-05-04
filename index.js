@@ -82,7 +82,7 @@ async function findVaccinationCenters(intervalId) {
     const myArgs = process.argv.slice(2);
     const age = myArgs[1] || 45;
     if (age < 18 || age>=130) {
-        console.log('Invalid age entered. Please enter a valid age');
+        console.log('Invalid age entered. Please enter a valid age.');
         return true;
     }
     let isCenterFound = false;
@@ -99,13 +99,14 @@ async function findVaccinationCenters(intervalId) {
                             isCenterFound = true;
                             const vaccinationLogString = session.vaccine !== '' ? session.vaccine.toUpperCase() : 'Unknown';
                             const pincodeLogString = pinCode ? '' : `(Pin : ${center.pincode}) `;
-                            console.log(`${session.available_capacity} slot(s) available at ${center.name} ${pincodeLogString}on ${session.date} with vaccine : ${vaccinationLogString}`);
+                            const slotLogString = session.available_capacity === 1 ? 'slot': 'slots';
+                            console.log(`${session.available_capacity} ${slotLogString} available at ${center.name} ${pincodeLogString}on ${session.date} with vaccine : ${vaccinationLogString}.`);
                         }
                     });
                 });
             }));
         } else {
-            console.log('Enter valid area. Tip: Enter district/state in SentenceCase like Delhi-SouthWestDelhi');
+            console.log('Enter valid area. Tip: Enter district/state in SentenceCase like Delhi-SouthWestDelhi.');
             clearInterval(intervalId);
             return true;
         }
@@ -114,7 +115,7 @@ async function findVaccinationCenters(intervalId) {
             console.log(`Retrying after ${retryTimeInSeconds} seconds`);
         } else {
             console.log('-----------');
-            console.log(`A total of ${numberOfOptionsFound} options were found as per your preference`);
+            console.log(`A total of ${numberOfOptionsFound} options were found as per your preference.`);
             clearInterval(intervalId);
             player.play('./notification.mp3', function (err) {
                 if (err) throw err;
@@ -122,7 +123,7 @@ async function findVaccinationCenters(intervalId) {
         }
         return isCenterFound;
     } catch (e) {
-        console.log('Unable to fetch right now. Please try again later.');
+        console.log('Unable to fetch data right now. Please try again later.');
         return true;
     }
 }
