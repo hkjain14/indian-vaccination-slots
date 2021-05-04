@@ -53,6 +53,15 @@ For example : AndhraPradesh
 
      node index.js 110006 60 covishield
 
+
+     node index.js 110052,110092 24
+
+#### Structure of multiple pincodes:
+
+_pinCode1,pinCode2_. 
+
+Pincodes specified must be without spaces
+
 ### iii) District wise :
 
      node index.js Delhi-SouthWestDelhi 45 covaxin

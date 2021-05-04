@@ -25,10 +25,13 @@ function generateCurrentDate() {
 
 function generateConfigs() {
     const myArgs = process.argv.slice(2);
-    let pinCode, area;
+    let pinCode, area, pinCodeArray;
     const firstArg = myArgs[0];
-    pinCode = firstArg.length === 6 ? firstArg: undefined;
-    area = firstArg.length === 6 ? undefined: firstArg;
+    pinCode = /^\d/.test(firstArg) ? firstArg: undefined;
+    area = /^\d/.test(firstArg) ? undefined: firstArg;
+    if (pinCode) {
+        pinCodeArray = pinCode.split(',');
+    }
     const age = myArgs[1] || 45;
     const vaccinePreference = myArgs[2];
     const ageToCheck = age >= 18 && age <= 44 ? 18 : 45;
@@ -38,14 +41,14 @@ function generateConfigs() {
     }
     const availableVaccines = ['', ...validVaccines];
     const matchVaccineArray = upperCaseVaccinePreference !== '' ? [vaccinePreference.toUpperCase()] : availableVaccines;
-    return {ageToCheck, matchVaccineArray, area, pinCode};
+    return {ageToCheck, matchVaccineArray, area, pinCodeArray};
 }
 
 function generateDistrictWiseCentersUrl(districtId) {
     return `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${districtId}&date=${generateCurrentDate()}`;
 }
 
-async function generateCentersUrl(pinCode, area) {
+async function generateCentersUrl(pinCodeArray, area) {
     let centersUrlArray = [];
     if (area) {
         const getStatesUrl = 'https://cdn-api.co-vin.in/api/v2/admin/location/states';
@@ -70,8 +73,10 @@ async function generateCentersUrl(pinCode, area) {
                 });
             }
         }
-    } else if (pinCode) {
-        centersUrlArray.push(`https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode=${pinCode}&date=${generateCurrentDate()}`);
+    } else if (pinCodeArray) {
+        pinCodeArray.map((pinCode) => {
+            centersUrlArray.push(`https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode=${pinCode}&date=${generateCurrentDate()}`);
+        })
     }
     return centersUrlArray;
 }
@@ -87,8 +92,8 @@ async function findVaccinationCenters(intervalId) {
     }
     let isCenterFound = false;
     try {
-        const {ageToCheck, matchVaccineArray, area, pinCode} = generateConfigs();
-        const centersUrlArray = await generateCentersUrl(pinCode, area);
+        const {ageToCheck, matchVaccineArray, area, pinCodeArray} = generateConfigs();
+        const centersUrlArray = await generateCentersUrl(pinCodeArray, area);
         if (centersUrlArray.length > 0) {
             await Promise.all(centersUrlArray.map(async (centersUrl) => {
                 const {centers} = await getRequest(centersUrl);
@@ -98,7 +103,7 @@ async function findVaccinationCenters(intervalId) {
                             numberOfOptionsFound++;
                             isCenterFound = true;
                             const vaccinationLogString = session.vaccine !== '' ? session.vaccine.toUpperCase() : 'Unknown';
-                            const pincodeLogString = pinCode ? '' : `(Pin : ${center.pincode}) `;
+                            const pincodeLogString = pinCodeArray && pinCodeArray.length === 1 ? '' : `(Pin : ${center.pincode}) `;
                             const slotLogString = session.available_capacity === 1 ? 'slot': 'slots';
                             console.log(`${session.available_capacity} ${slotLogString} available at ${center.name} ${pincodeLogString}on ${session.date} with vaccine : ${vaccinationLogString}.`);
                         }
