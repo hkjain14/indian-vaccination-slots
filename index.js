@@ -5,8 +5,13 @@ const retryTimeInSeconds = 5;
 const validVaccines = ['COVISHIELD', 'COVAXIN'];
 
 async function getRequest(url) {
+    const config = {
+        headers: {
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36',
+        }
+    };
     try {
-        const response = await axios.get(url);
+        const response = await axios.get(url, config);
         return response.data;
     } catch (e) {
         throw e;
@@ -27,8 +32,8 @@ function generateConfigs() {
     const myArgs = process.argv.slice(2);
     let pinCode, area, pinCodeArray;
     const firstArg = myArgs[0];
-    pinCode = /^\d/.test(firstArg) ? firstArg: undefined;
-    area = /^\d/.test(firstArg) ? undefined: firstArg;
+    pinCode = /^\d/.test(firstArg) ? firstArg : undefined;
+    area = /^\d/.test(firstArg) ? undefined : firstArg;
     if (pinCode) {
         pinCodeArray = pinCode.split(',');
     }
@@ -55,14 +60,14 @@ async function generateCentersUrl(pinCodeArray, area) {
         const statesData = await getRequest(getStatesUrl);
         let areaArray = area.split('-');
         areaArray = areaArray.map((area) => {
-            const result = area.replace( /([A-Z])/g, " $1" );
+            const result = area.replace(/([A-Z])/g, " $1");
             return result.charAt(0).toUpperCase() + result.slice(1);
         });
         const state = statesData.states.find((el) => areaArray[0] && areaArray[0].toLowerCase().includes(el.state_name.toLowerCase()));
         if (state) {
             const getDistrictsUrl = `https://cdn-api.co-vin.in/api/v2/admin/location/districts/${state.state_id}`;
             const districtsData = await getRequest(getDistrictsUrl);
-            if(areaArray[1]) {
+            if (areaArray[1]) {
                 const district = districtsData.districts.find((el) => areaArray[1] && areaArray[1].toLowerCase().includes(el.district_name.toLowerCase()));
                 if (district) {
                     centersUrlArray.push(generateDistrictWiseCentersUrl(district.district_id));
@@ -86,7 +91,7 @@ async function findVaccinationCenters(intervalId) {
     let numberOfOptionsFound = 0;
     const myArgs = process.argv.slice(2);
     const age = myArgs[1] || 45;
-    if (age < 18 || age>=130) {
+    if (age < 18 || age >= 130) {
         console.log('Invalid age entered. Please enter a valid age.');
         return true;
     }
@@ -104,7 +109,7 @@ async function findVaccinationCenters(intervalId) {
                             isCenterFound = true;
                             const vaccinationLogString = session.vaccine !== '' ? session.vaccine.toUpperCase() : 'Unknown';
                             const pincodeLogString = pinCodeArray && pinCodeArray.length === 1 ? '' : `(Pin : ${center.pincode}) `;
-                            const slotLogString = session.available_capacity === 1 ? 'slot': 'slots';
+                            const slotLogString = session.available_capacity === 1 ? 'slot' : 'slots';
                             console.log(`${session.available_capacity} ${slotLogString} available at ${center.name} ${pincodeLogString}on ${session.date} with vaccine : ${vaccinationLogString}.`);
                         }
                     });
@@ -128,6 +133,7 @@ async function findVaccinationCenters(intervalId) {
         }
         return isCenterFound;
     } catch (e) {
+        console.log(e.message);
         console.log('Unable to fetch data right now. Please try again later.');
         return true;
     }
@@ -135,10 +141,10 @@ async function findVaccinationCenters(intervalId) {
 
 async function run() {
     const isCenterFound = await findVaccinationCenters();
-    if(!isCenterFound) {
+    if (!isCenterFound) {
         const intervalId = setInterval(async () => {
             await findVaccinationCenters(intervalId);
-        }, retryTimeInSeconds*1000);
+        }, retryTimeInSeconds * 1000);
     }
 }
 
