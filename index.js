@@ -1,14 +1,14 @@
 const axios = require('axios');
 const player = require('play-sound')(opts = {});
 
-const retryTimeInSeconds = 5;
-const validVaccines = ['COVISHIELD', 'COVAXIN'];
+const retryTimeInSeconds = 30;
+const validVaccines = ['COVISHIELD', 'COVAXIN', 'SPUTNIK V'];
 
 async function getRequest(url) {
     const config = {
         headers: {
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36',
-        }
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36',
+        },
     };
     try {
         const response = await axios.get(url, config);
@@ -50,7 +50,7 @@ function generateConfigs() {
 }
 
 function generateDistrictWiseCentersUrl(districtId) {
-    return `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${districtId}&date=${generateCurrentDate()}`;
+    return `https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?district_id=${districtId}&date=${generateCurrentDate()}`;
 }
 
 async function generateCentersUrl(pinCodeArray, area) {
@@ -80,7 +80,7 @@ async function generateCentersUrl(pinCodeArray, area) {
         }
     } else if (pinCodeArray) {
         pinCodeArray.map((pinCode) => {
-            centersUrlArray.push(`https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode=${pinCode}&date=${generateCurrentDate()}`);
+            centersUrlArray.push(`https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?pincode=${pinCode}&date=${generateCurrentDate()}`);
         })
     }
     return centersUrlArray;
@@ -108,9 +108,17 @@ async function findVaccinationCenters(intervalId) {
                             numberOfOptionsFound++;
                             isCenterFound = true;
                             const vaccinationLogString = session.vaccine !== '' ? session.vaccine.toUpperCase() : 'Unknown';
-                            const pincodeLogString = pinCodeArray && pinCodeArray.length === 1 ? '' : `(Pin : ${center.pincode}) `;
-                            const slotLogString = session.available_capacity === 1 ? 'slot' : 'slots';
-                            console.log(`${session.available_capacity} ${slotLogString} available at ${center.name} ${pincodeLogString}on ${session.date} with vaccine : ${vaccinationLogString}.`);
+                            const pincodeLogString =`(Pin : ${center.pincode}, District: ${center.district_name}) `;
+                            const feeType = center.fee_type;
+                            let cost;
+                            if (feeType === 'Free') {
+                                cost = feeType;
+                            } else if (feeType === 'Paid') {
+                                const vaccine = center.vaccine_fees && center.vaccine_fees.find((vacc) => vacc.vaccine === session.vaccine);
+                                cost = vaccine ? `Rs. ${vaccine.fee}` : 'Paid';
+                            }
+                            const costString = `Cost = ${cost}`
+                            console.log(`Dose1 : ${session.available_capacity_dose1} slots, Dose2 : ${session.available_capacity_dose2} slots available at ${center.name} ${pincodeLogString}on ${session.date} with vaccine : ${vaccinationLogString} ${costString}.`);
                         }
                     });
                 });
@@ -128,14 +136,15 @@ async function findVaccinationCenters(intervalId) {
             console.log(`A total of ${numberOfOptionsFound} options were found as per your preference.`);
             clearInterval(intervalId);
             player.play('./notification.mp3', function (err) {
-                if (err) throw err;
+                // if (err) throw err;
             });
         }
         return isCenterFound;
     } catch (e) {
         console.log(e.message);
         console.log('Unable to fetch data right now. Please try again later.');
-        return true;
+        console.log(`Retrying after ${retryTimeInSeconds} seconds`);
+        return false;
     }
 }
 
